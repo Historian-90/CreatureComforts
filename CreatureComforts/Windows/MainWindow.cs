@@ -354,6 +354,7 @@ public sealed class MainWindow : Window, IDisposable
         if (!m.Available) Colored(Warn, m.Status);
         else if (m.Refused) Colored(Bad, m.Status);
         else Colored(Good, m.Status);
+        Colored(Muted, "Last change: " + m.LastChange);
         if (ImGui.Button("Apply again"))
             m.Reset();
         if (ImGui.IsItemHovered()) Tip("Take Creature Comforts' Moodles off and put the right ones back on.");

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4
+- Moodles stay put through zone changes, loading screens and duty starts instead of popping up again.
+- Loading the plugin or logging in updates your existing need Moodles in place rather than re-adding them.
+- The Moodles page shows the last change Creature Comforts made and why.
+
 ## 0.1.3
 - Fixed standing /cpose idles not filling Bladder or Hygiene (sitting ones already worked).
 - Change Pose is no longer offered as a refill emote; use "Use my current pose" for poses instead.
