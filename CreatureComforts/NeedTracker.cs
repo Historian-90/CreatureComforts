@@ -176,7 +176,7 @@ public sealed class NeedTracker : IDisposable
             var s = Config.For(kind);
             var byEmote = s.RefillEmote != 0 && pose.Emote == s.RefillEmote;
             var byPose = s.RefillPoseType >= 0 && cpose.Type == s.RefillPoseType && cpose.Index == s.RefillPoseIndex &&
-                         still && (pose.Emote == 0 || pose.Mode == FFXIVClientStructs.FFXIV.Client.Game.Character.CharacterModes.InPositionLoop);
+                         still && (GameInfo.IsPoseEmote(pose.Emote) || pose.Mode == FFXIVClientStructs.FFXIV.Client.Game.Character.CharacterModes.InPositionLoop);
             var holding = Config.IsActive(kind) && (byEmote || byPose);
             if (holding && !Holding(kind))
                 LastActivity = $"{(byEmote ? GameInfo.EmoteName(pose.Emote) : GameInfo.PoseName(cpose.Type, cpose.Index))}: filling {Needs.Info(kind).Name}...";

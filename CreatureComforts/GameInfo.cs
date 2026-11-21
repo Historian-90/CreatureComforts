@@ -52,11 +52,22 @@ public static class GameInfo
         foreach (var e in Plugin.DataManager.GetExcelSheet<Emote>())
         {
             var name = e.Name.ExtractText();
-            if (name.Length == 0 || e.Order == 0) continue;
+            if (name.Length == 0 || e.Order == 0 || IsPoseEmote(e.RowId)) continue;
             var cmd = e.TextCommand.ValueNullable?.Command.ExtractText() ?? string.Empty;
             list.Add((e.RowId, name, cmd));
         }
         return list.OrderBy(x => x.Item2, StringComparer.CurrentCultureIgnoreCase).ToList();
+    }
+
+    /// <summary>
+    /// Emotes the game keeps set while you just stand in a /cpose idle: the unnamed pose rows (CJ saw 92 while
+    /// standing in pose 3) and Change Pose itself. These don't count as "doing an emote".
+    /// </summary>
+    public static bool IsPoseEmote(uint emoteId)
+    {
+        if (emoteId == 0) return true;
+        if (!EmoteNamesEnglish.TryGetValue(emoteId, out var name)) return true;
+        return name.Equals("Change Pose", StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool IsDance(uint emoteId, Configuration config)
