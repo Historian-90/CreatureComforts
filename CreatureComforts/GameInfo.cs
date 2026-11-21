@@ -110,6 +110,9 @@ public static class GameInfo
         return ((int)chara->EmoteController.CurrentPoseType, chara->EmoteController.CPoseState);
     }
 
+    /// <summary>The game reports 255 while you're moving, jumping or mid-emote: not a real pose.</summary>
+    public static bool IsValidPose(int type) => type is >= 0 and <= 6;
+
     public static string PoseName(int type, byte index)
     {
         var kind = type switch

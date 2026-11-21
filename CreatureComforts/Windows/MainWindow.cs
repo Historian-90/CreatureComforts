@@ -37,6 +37,8 @@ public sealed class MainWindow : Window, IDisposable
     private NeedKind? iconTarget;
     private bool iconForSerene;
     private string newDance = string.Empty;
+    private string? captureNote;
+    private NeedSettings? captureNoteFor;
 
     private Configuration Config => plugin.Configuration;
     private NeedTracker Tracker => plugin.Tracker;
@@ -232,6 +234,7 @@ public sealed class MainWindow : Window, IDisposable
                     ImGui.SameLine();
                     SliderSetting("Fill while holding##hold", Config.HoldRefillPerSecond, 1f, 50f, "%.0f%%/s", v => Config.HoldRefillPerSecond = v, 110);
                     DrawPosePicker(s);
+                    if (captureNote != null && captureNoteFor == s) Colored(Muted, captureNote);
                     if (Tracker.Holding(info.Kind)) Colored(Good, "Filling while you hold it...");
                     if (info.Kind == NeedKind.Hygiene)
                     {
@@ -289,15 +292,31 @@ public sealed class MainWindow : Window, IDisposable
     private void DrawPosePicker(NeedSettings s)
     {
         var me = Plugin.ObjectTable.LocalPlayer;
-        if (ImGui.Button("Use my current pose##pose") && me != null)
+        if (ImGui.Button("Use what I'm doing now##pose") && me != null)
         {
+            var emote = GameInfo.Pose(me).Emote;
             var p = GameInfo.CurrentPose(me);
-            s.RefillPoseType = p.Type;
-            s.RefillPoseIndex = p.Index;
+            if (!GameInfo.IsPoseEmote(emote))
+            {
+                // Doing an emote: that becomes the refill emote.
+                s.RefillEmote = emote;
+                captureNote = $"Refill emote set to {GameInfo.EmoteName(emote)}.";
+            }
+            else if (GameInfo.IsValidPose(p.Type))
+            {
+                s.RefillPoseType = p.Type;
+                s.RefillPoseIndex = p.Index;
+                captureNote = "Refill pose set to " + GameInfo.PoseName(p.Type, p.Index) + ".";
+            }
+            else
+            {
+                captureNote = "Couldn't tell what you're doing. Stand still or sit down (or start a looping emote), then try again.";
+            }
+            captureNoteFor = s;
             Config.Save();
         }
         if (ImGui.IsItemHovered())
-            Tip("Get into the idle pose your animation mod replaces (stand or /groundsit, then /cpose until it's the right one), then click this. Holding that pose while standing still fills the need a little every second.");
+            Tip("Start the looping emote, or get into the idle pose (stand or /groundsit, then /cpose until it's the right one) that your animation mod replaces, then click this. Holding it fills the need a little every second.");
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         if (s.RefillPoseType < 0)

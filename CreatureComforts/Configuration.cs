@@ -7,7 +7,7 @@ namespace CreatureComforts;
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
-    public int Version { get; set; } = 2;
+    public int Version { get; set; } = 3;
 
     public bool Enabled { get; set; } = true;
 
@@ -104,6 +104,14 @@ public class Configuration : IPluginConfiguration
             if (NeedSettings.TryGetValue(NeedKind.Hygiene, out var hygiene) && hygiene.Icon == 218881) hygiene.Icon = 218581;
             if (SereneIcon == 217311) SereneIcon = 213509;
             Version = 2;
+            Save();
+        }
+        if (Version < 3)
+        {
+            // 0.1.6: a pose captured mid-movement was saved as type 255, which "matched" whenever you moved.
+            foreach (var s in NeedSettings.Values)
+                if (s.RefillPoseType > 6) s.RefillPoseType = -1;
+            Version = 3;
             Save();
         }
     }

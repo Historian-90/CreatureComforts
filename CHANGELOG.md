@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+- Fixed a refill pose saved while moving or mid-emote ("Pose type 255") filling the need whenever you moved instead of while you held still. Such poses are cleared; set yours again.
+- "Use my current pose" is now "Use what I'm doing now": click it during a looping emote to make that the refill emote, or in a /cpose idle to make that the refill pose.
+
 ## 0.1.5
 - Moodles drops every Moodle on your character when you change zones once a plugin has applied one. Creature Comforts now puts its Moodles back right away, during the loading screen when it can, so they return without the pop-up.
 - New option (on by default): also put back your other Moodles after a zone change. Timed ones restart their timer.

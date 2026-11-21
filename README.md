@@ -27,8 +27,9 @@ These needs fill up while you hold the emote or pose: 10% every second by defaul
 refill takes about ten seconds. Pick an emote that **loops** (keeps playing until you move); a one-off
 emote only counts for the moment it plays. `/cpose` idles count while you stand or sit still in them.
 
-They're meant to be paired with Penumbra animation mods that replace those emotes or poses. To pick a pose,
-get into it (stand or `/groundsit`, then `/cpose` until it's the right one) and click *Use my current pose*.
+They're meant to be paired with Penumbra animation mods that replace those emotes or poses. To pick one, start the
+looping emote, or get into the pose (stand or `/groundsit`, then `/cpose` until it's the right one), and click
+*Use what I'm doing now*. You can also pick an emote from the list.
 
 Needs only drain while you're logged in. How fast each one drains (and how fast things refill it) can be
 changed in the plugin.
