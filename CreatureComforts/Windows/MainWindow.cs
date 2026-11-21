@@ -357,7 +357,8 @@ public sealed class MainWindow : Window, IDisposable
         ImGui.SameLine();
         if (ImGui.Button("Add") && newDance.Trim().Length > 0)
         {
-            Config.ExtraDanceEmotes.Add(newDance.Trim());
+            if (!Config.ExtraDanceEmotes.Contains(newDance.Trim(), StringComparer.OrdinalIgnoreCase))
+                Config.ExtraDanceEmotes.Add(newDance.Trim());
             newDance = string.Empty;
             Config.Save();
         }

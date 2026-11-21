@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Dalamud.Configuration;
 
 namespace CreatureComforts;
@@ -64,7 +65,15 @@ public class Configuration : IPluginConfiguration
     public float HygieneCombatMultiplier { get; set; } = 2f;
 
     /// <summary>Extra emote names (besides anything with "dance" in its name) that count as dancing.</summary>
-    public List<string> ExtraDanceEmotes { get; set; } = ["Bee's Knees", "Most Gentlemanly", "Songbird", "Box Step", "Side Step", "Get Fantasy", "Popotostep", "Paint It Red", "Paint It Blue", "Paint It Yellow", "Paint It Black"];
+    // Starts empty on purpose: the settings loader ADDS saved items to whatever a list starts with, so a list
+    // that started with the defaults grew a full extra copy on every load. Defaults go in via Migrate().
+    public List<string> ExtraDanceEmotes { get; set; } = [];
+
+    public bool DanceListSeeded { get; set; }
+
+    public static readonly string[] DefaultDanceEmotes =
+        ["Bee's Knees", "Most Gentlemanly", "Songbird", "Box Step", "Side Step", "Get Fantasy", "Popotostep",
+         "Paint It Red", "Paint It Blue", "Paint It Yellow", "Paint It Black"];
 
     // ---- Places ----
 
@@ -106,6 +115,20 @@ public class Configuration : IPluginConfiguration
             Version = 2;
             Save();
         }
+        if (!DanceListSeeded)
+        {
+            ExtraDanceEmotes.AddRange(DefaultDanceEmotes);
+            DanceListSeeded = true;
+        }
+        // Clean up the repeats older versions piled up (keeps the first of each, in order).
+        var unique = ExtraDanceEmotes.Select(x => x.Trim()).Where(x => x.Length > 0)
+                                     .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (unique.Count != ExtraDanceEmotes.Count)
+        {
+            ExtraDanceEmotes = unique;
+            Save();
+        }
+
         if (Version < 3)
         {
             // 0.1.6: a pose captured mid-movement was saved as type 255, which "matched" whenever you moved.

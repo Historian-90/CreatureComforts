@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.7
+- Fixed the "Emotes that count as dancing" list gaining another copy of the default dances every time the plugin loaded. Repeats are cleaned up automatically.
+
 ## 0.1.6
 - Fixed a refill pose saved while moving or mid-emote ("Pose type 255") filling the need whenever you moved instead of while you held still. Such poses are cleared; set yours again.
 - "Use my current pose" is now "Use what I'm doing now": click it during a looping emote to make that the refill emote, or in a /cpose idle to make that the refill pose.
