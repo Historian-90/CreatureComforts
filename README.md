@@ -34,8 +34,8 @@ When a need drops low, it gets a Moodle. As it drops further, the Moodle gains s
 name changes, for example *Peckish*, then *Hungry*, then *Starving*. When every need is met you get a
 *Serene* buff instead. Icons, names and descriptions can all be changed.
 
-**Moodles setting needed:** in Moodles' settings, turn on *Allow other plugins to apply Moodles* and allow
-party members (or everyone). Creature Comforts applies the Moodles as you, and you count as a member
+**Moodles setting needed:** in Moodles' settings, turn on *Allow other plugins apply Moodles* and, under
+it, *Allow applying moodles from party members* (or *from everyone*). Creature Comforts applies the Moodles as you, and you count as a member
 of your own party. The plugin tells you if Moodles is turning it away.
 
 Works nicely with [Outer Voice](https://github.com/Historian-90/OuterVoice): make a custom event with a

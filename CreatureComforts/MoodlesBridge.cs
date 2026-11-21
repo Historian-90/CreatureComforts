@@ -170,7 +170,7 @@ public sealed class MoodlesBridge
 
         Refused = missing.Count == sent.Count;
         Status = Refused
-            ? "Moodles isn't accepting our Moodles. In Moodles' Settings, turn on \"Allow other plugins to apply Moodles\" and allow party members (or everyone)."
+            ? "Moodles isn't accepting our Moodles. In Moodles' Settings, under \"Allow other plugins apply Moodles\", also tick \"Allow applying moodles from party members\" (or \"from everyone\"). Creature Comforts applies them as you, and you count as a member of your own party."
             : $"Put back {missing.Count} Moodle(s) that had gone missing.";
         foreach (var w in missing) Apply(me, w);
         lastApply = DateTime.UtcNow;
