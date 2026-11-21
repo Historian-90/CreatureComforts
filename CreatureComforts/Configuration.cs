@@ -23,6 +23,9 @@ public class Configuration : IPluginConfiguration
     public float Threshold2 { get; set; } = 35f;
     public float Threshold3 { get; set; } = 15f;
 
+    /// <summary>Put your own (non-Creature Comforts) Moodles back if Moodles drops them on a zone change.</summary>
+    public bool ProtectOtherMoodles { get; set; } = true;
+
     public bool ShowSerene { get; set; } = true;
     public uint SereneIcon { get; set; } = Needs.SereneIcon;
     public string SereneTitle { get; set; } = Needs.SereneTitle;

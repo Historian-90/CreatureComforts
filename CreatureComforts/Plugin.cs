@@ -29,7 +29,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public Configuration Configuration { get; }
     public NeedTracker Tracker { get; }
-    public MoodlesBridge Moodles { get; } = new();
+    public MoodlesBridge Moodles { get; }
 
     private readonly Ipc ipc;
     private readonly WindowSystem windows = new("CreatureComforts");
@@ -40,6 +40,7 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         foreach (var n in Needs.All) Configuration.For(n.Kind);
         Configuration.Migrate();
+        Moodles = new MoodlesBridge(Configuration);
 
         Tracker = new NeedTracker(this);
         ipc = new Ipc(Tracker);

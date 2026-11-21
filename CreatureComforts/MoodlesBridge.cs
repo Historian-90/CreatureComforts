@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Ipc.Exceptions;
 
@@ -16,15 +17,24 @@ public sealed record WantedMoodle(Guid Guid, uint Icon, string Title, string Des
 
 /// <summary>
 /// Puts our needs on the player as Moodles through Moodles' public IPC, and takes them off again.
-/// Moodles only accepts statuses from other plugins when its "Allow other plugins to apply Moodles"
-/// setting is on AND it allows the applier (party/friends/all); we apply as the player themselves,
-/// who counts as a party member, so "party" or "all" is enough.
+///
+/// Moodles only accepts statuses from other plugins when its "Allow other plugins apply Moodles" setting is on
+/// AND it allows the applier (party/friends/all); we apply as the player themselves, who counts as a party
+/// member, so "party" or "all" is enough.
+///
+/// Zone changes: any IPC call marks the player's Moodles list as "touched by IPC", and Moodles deletes such
+/// lists when the character unloads (meant for synced friends, but it hits your own character too). So on
+/// every zone change Moodles drops ALL your Moodles, ours and your own. We put them back as soon as the new
+/// character exists, ideally while the loading screen is still up: Moodles doesn't show its "applied" pop-up
+/// while you're loading, so they come back quietly.
 /// </summary>
 public sealed class MoodlesBridge
 {
     private const int MoodleVersion = 2;
     private const int Positive = 0;
     private const int Negative = 1;
+
+    private readonly Configuration config;
 
     /// <summary>What we last asked Moodles to show (guid -> moodle).</summary>
     private readonly Dictionary<Guid, WantedMoodle> sent = [];
@@ -34,15 +44,18 @@ public sealed class MoodlesBridge
     private bool cleanedUp;
     private DateTime retryAt = DateTime.MinValue;
 
-    // Zone changes: while loading (and for a few seconds after) the character is being rebuilt and Moodles may
-    // not show its statuses yet. Touching anything then made Moodles fire its "applied" pop-up again.
-    private static readonly TimeSpan SettleTime = TimeSpan.FromSeconds(8);
-    private DateTime quietUntil = DateTime.MinValue;
+    // Zone changes
     private nint lastAddress;
     private uint lastTerritory;
+    private DateTime settleUntil = DateTime.MinValue;   // right after a zone change: check often, don't cry "blocked"
+    private DateTime nextLoadingCheck = DateTime.MinValue;
 
-    /// <summary>Moodles seen missing on the previous check; only put back if still missing on the next one.</summary>
-    private readonly HashSet<Guid> missingLastCheck = [];
+    /// <summary>Your other Moodles (not ours), as last seen, so they can be put back after a zone change.</summary>
+    private List<MoodleData> othersSnapshot = [];
+    private DateTime nextSnapshot = DateTime.MinValue;
+
+    /// <summary>How many checks in a row found everything we sent missing (for the "blocked" diagnosis).</summary>
+    private int missingStreak;
 
     /// <summary>The last thing we changed in Moodles, and why (shown on the Moodles page).</summary>
     public string LastChange { get; private set; } = "Nothing yet.";
@@ -50,35 +63,44 @@ public sealed class MoodlesBridge
     public string Status { get; private set; } = "Not checked yet.";
     public bool Available { get; private set; }
 
-    /// <summary>True when a Moodle we sent didn't show up: Moodles' settings are probably blocking it.</summary>
+    /// <summary>True when Moodles keeps turning ours away: its settings are probably blocking us.</summary>
     public bool Refused { get; private set; }
 
     public int? MoodlesApiVersion { get; private set; }
 
+    public MoodlesBridge(Configuration config) => this.config = config;
+
     /// <summary>Called every tick with what should be showing. Sends only changes, and checks now and then.</summary>
     public void Sync(IPlayerCharacter me, IReadOnlyList<WantedMoodle> wanted)
     {
-        var now0 = DateTime.UtcNow;
-        if (now0 < retryAt) return;
-
-        // Hold still through loading screens, zone changes and duty starts.
-        if (Loading())
-        {
-            quietUntil = now0 + SettleTime;
-            return;
-        }
-        var territory = Plugin.ClientState.TerritoryType;
-        if (me.Address != lastAddress || territory != lastTerritory)
-        {
-            lastAddress = me.Address;
-            lastTerritory = territory;
-            quietUntil = now0 + SettleTime;
-            missingLastCheck.Clear();
-        }
-        if (now0 < quietUntil) return;
+        var now = DateTime.UtcNow;
+        if (now < retryAt) return;
 
         try
         {
+            var territory = Plugin.ClientState.TerritoryType;
+            var zoned = me.Address != lastAddress || territory != lastTerritory;
+            if (zoned)
+            {
+                lastAddress = me.Address;
+                lastTerritory = territory;
+                settleUntil = now + TimeSpan.FromSeconds(20);
+                missingStreak = 0;
+            }
+
+            // During a loading screen: only put back what Moodles dropped (quietly), nothing else.
+            if (Loading())
+            {
+                if (zoned || now >= nextLoadingCheck)
+                {
+                    nextLoadingCheck = now + TimeSpan.FromSeconds(0.5);
+                    Restore(me, wanted, "loading");
+                }
+                return;
+            }
+
+            if (zoned) Restore(me, wanted, "zone change");
+
             var wantedIds = wanted.Select(w => w.Guid).ToHashSet();
             if (!cleanedUp)
             {
@@ -103,16 +125,22 @@ public sealed class MoodlesBridge
                 LastChange = $"{Stamp()} {(old == null ? "Put on" : "Updated")} {w.Title}{(w.Stacks > 1 ? $" ({w.Stacks} stacks)" : "")}.";
                 Apply(me, w);
                 sent[w.Guid] = w;
-                lastApply = DateTime.UtcNow;
+                lastApply = now;
             }
 
-            // Every 15 s (and shortly after applying) make sure ours are really there; put back any that aren't
-            // (removed by hand, or Moodles reloaded).
-            var now = DateTime.UtcNow;
+            // Check that ours are really there (every 15 s; every 2 s just after a zone change).
             if (now >= nextCheck && now - lastApply > TimeSpan.FromSeconds(1.5))
             {
-                nextCheck = now + TimeSpan.FromSeconds(15);
-                Verify(me);
+                nextCheck = now + TimeSpan.FromSeconds(now < settleUntil ? 2 : 15);
+                Verify(me, now);
+            }
+
+            // Remember your other Moodles so a zone change can't take them away.
+            if (now >= nextSnapshot && now >= settleUntil)
+            {
+                nextSnapshot = now + TimeSpan.FromSeconds(3);
+                var ours = Needs.AllMoodleGuids.ToHashSet();
+                othersSnapshot = OnMe(me).Values.Where(m => !ours.Contains(m.GUID)).ToList();
             }
 
             Available = true;
@@ -137,6 +165,40 @@ public sealed class MoodlesBridge
         }
     }
 
+    /// <summary>Puts back ours (and, if allowed, your own) Moodles that Moodles dropped.</summary>
+    private void Restore(IPlayerCharacter me, IReadOnlyList<WantedMoodle> wanted, string when)
+    {
+        var onMe = OnMe(me);
+        var back = new List<string>();
+
+        foreach (var w in wanted)
+        {
+            if (onMe.ContainsKey(w.Guid)) continue;
+            Apply(me, w);
+            sent[w.Guid] = w;
+            back.Add(w.Title);
+        }
+
+        if (config.ProtectOtherMoodles)
+        {
+            foreach (var m in othersSnapshot)
+            {
+                if (onMe.ContainsKey(m.GUID)) continue;
+                // Applied as you, so Moodles' "party members" permission lets it through.
+                var data = m with { Applier = ApplierName(me) };
+                Plugin.PluginInterface.GetIpcSubscriber<MoodleData, nint, object>("Moodles.AddOrUpdateMoodleByDataByPtrV2")
+                      .InvokeAction(data, me.Address);
+                back.Add(Clean(m.Title));
+            }
+        }
+
+        if (back.Count > 0)
+        {
+            LastChange = $"{Stamp()} Put back {string.Join(", ", back)} after Moodles dropped them ({when}).";
+            lastApply = DateTime.UtcNow;
+        }
+    }
+
     /// <summary>Forget what was sent, so everything is applied again on the next tick.</summary>
     public void Reset()
     {
@@ -144,15 +206,8 @@ public sealed class MoodlesBridge
         cleanedUp = false;
         nextCheck = DateTime.MinValue;
         retryAt = DateTime.MinValue;
-        missingLastCheck.Clear();
+        missingStreak = 0;
     }
-
-    private static bool Loading() =>
-        Plugin.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas] ||
-        Plugin.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas51] ||
-        Plugin.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.LoggingOut];
-
-    private static string Stamp() => DateTime.Now.ToString("HH:mm:ss");
 
     public void RemoveAll(IPlayerCharacter? me)
     {
@@ -167,6 +222,16 @@ public sealed class MoodlesBridge
         }
         sent.Clear();
     }
+
+    private static bool Loading() =>
+        Plugin.Condition[ConditionFlag.BetweenAreas] ||
+        Plugin.Condition[ConditionFlag.BetweenAreas51] ||
+        Plugin.Condition[ConditionFlag.LoggingOut];
+
+    private static string Stamp() => DateTime.Now.ToString("HH:mm:ss");
+
+    private static string Clean(string title) =>
+        System.Text.RegularExpressions.Regex.Replace(title ?? string.Empty, @"\[/?[a-zA-Z]+(=[^\]]*)?\]", string.Empty).Trim();
 
     private static string ApplierName(IPlayerCharacter me) =>
         $"{me.Name.TextValue}@{me.HomeWorld.ValueNullable?.Name.ExtractText() ?? string.Empty}";
@@ -187,48 +252,46 @@ public sealed class MoodlesBridge
               .InvokeAction(guids, me.Address);
     }
 
-    private void Verify(IPlayerCharacter me)
+    private static Dictionary<Guid, MoodleData> OnMe(IPlayerCharacter me)
+    {
+        var result = new Dictionary<Guid, MoodleData>();
+        var list = Plugin.PluginInterface.GetIpcSubscriber<nint, List<MoodleData>>("Moodles.GetStatusManagerInfoByPtrV2")
+                         .InvokeFunc(me.Address);
+        foreach (var m in list ?? []) result[m.GUID] = m;
+        return result;
+    }
+
+    private void Verify(IPlayerCharacter me, DateTime now)
     {
         MoodlesApiVersion ??= Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version").InvokeFunc();
 
-        var onMe = Plugin.PluginInterface.GetIpcSubscriber<nint, List<MoodleData>>("Moodles.GetStatusManagerInfoByPtrV2")
-                         .InvokeFunc(me.Address)
-                         .ToDictionary(m => m.GUID, m => m);
-
+        var onMe = OnMe(me);
         var missing = sent.Values.Where(w => !onMe.ContainsKey(w.Guid)).ToList();
         if (missing.Count == 0)
         {
-            missingLastCheck.Clear();
+            missingStreak = 0;
             Refused = false;
             Status = sent.Count == 0 ? "Connected to Moodles. No needs to show right now." : $"Connected to Moodles. Showing {sent.Count}.";
             return;
         }
 
-        // Only act on Moodles that were missing last time too: a single miss can just be Moodles catching up.
-        var confirmed = missing.Where(w => missingLastCheck.Contains(w.Guid)).ToList();
-        missingLastCheck.Clear();
-        foreach (var w in missing) missingLastCheck.Add(w.Guid);
-        if (confirmed.Count == 0)
+        // Put them back right away (removed by hand, or dropped by Moodles).
+        foreach (var w in missing) Apply(me, w);
+        lastApply = now;
+
+        // Only call it "blocked" when everything we send keeps vanishing, well clear of a zone change.
+        missingStreak = missing.Count == sent.Count ? missingStreak + 1 : 0;
+        if (missingStreak >= 3 && now >= settleUntil)
         {
-            nextCheck = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+            Refused = true;
+            Status = "Moodles isn't accepting our Moodles. In Moodles' Settings, under \"Allow other plugins apply Moodles\", also tick \"Allow applying moodles from party members\" (or \"from everyone\"). Creature Comforts applies them as you, and you count as a member of your own party.";
             return;
         }
 
-        var refusedNow = confirmed.Count == sent.Count;
-        if (refusedNow && Refused)
-        {
-            // Still nothing after a retry: Moodles' settings are blocking us. Keep trying quietly.
-            foreach (var w in confirmed) Apply(me, w);
-            return;
-        }
-
-        Refused = refusedNow;
-        Status = Refused
-            ? "Moodles isn't accepting our Moodles. In Moodles' Settings, under \"Allow other plugins apply Moodles\", also tick \"Allow applying moodles from party members\" (or \"from everyone\"). Creature Comforts applies them as you, and you count as a member of your own party."
-            : $"Put back {confirmed.Count} Moodle(s) that had gone missing.";
         if (!Refused)
-            LastChange = $"{Stamp()} Put back {string.Join(", ", confirmed.Select(w => w.Title))} (missing from Moodles on two checks).";
-        foreach (var w in confirmed) Apply(me, w);
-        lastApply = DateTime.UtcNow;
+        {
+            Status = $"Put back {missing.Count} Moodle(s) that had gone missing.";
+            LastChange = $"{Stamp()} Put back {string.Join(", ", missing.Select(w => w.Title))} (missing from Moodles).";
+        }
     }
 }

@@ -359,6 +359,15 @@ public sealed class MainWindow : Window, IDisposable
             m.Reset();
         if (ImGui.IsItemHovered()) Tip("Take Creature Comforts' Moodles off and put the right ones back on.");
 
+        var protect = Config.ProtectOtherMoodles;
+        if (ImGui.Checkbox("Keep my other Moodles through zone changes", ref protect))
+        {
+            Config.ProtectOtherMoodles = protect;
+            Config.Save();
+        }
+        if (ImGui.IsItemHovered())
+            Tip("Once another plugin has given you a Moodle, Moodles drops ALL your Moodles whenever you change zones (it treats you like a synced friend who walked away). Creature Comforts puts its own back either way; with this on it also puts back the other Moodles you had. Timed Moodles start their timer over.");
+
         ImGui.Spacing();
         Title("When Moodles appear");
         Note("Each need shows one Moodle once it drops below the first line, with more stacks as it drops further.");

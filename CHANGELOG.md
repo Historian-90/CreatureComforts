@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+- Moodles drops every Moodle on your character when you change zones once a plugin has applied one. Creature Comforts now puts its Moodles back right away, during the loading screen when it can, so they return without the pop-up.
+- New option (on by default): also put back your other Moodles after a zone change. Timed ones restart their timer.
+- No more false "Moodles is blocking us" warning after a zone change.
+
 ## 0.1.4
 - Moodles stay put through zone changes, loading screens and duty starts instead of popping up again.
 - Loading the plugin or logging in updates your existing need Moodles in place rather than re-adding them.
