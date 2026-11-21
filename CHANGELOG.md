@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+- Bladder and Hygiene now fill while you hold their emote or /cpose idle (10% a second by default, adjustable) instead of all at once. Pick an emote that loops.
+- New default icons for Social, Hygiene and the Serene buff.
+
 ## 0.1.1
 - Bladder and Hygiene can also be refilled by a /cpose idle (standing, sitting on the ground and so on): get into the pose and click "Use my current pose".
 - Long text and tooltips now wrap instead of running off the window.
