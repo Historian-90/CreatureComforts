@@ -102,7 +102,7 @@ public sealed class MainWindow : Window, IDisposable
             ? ImGuiComponents.IconButton((int)target, icon, Accent, Accent, Accent, size)
             : ImGuiComponents.IconButton((int)target, icon, new Vector4(0, 0, 0, 0), null, null, size);
         if (clicked) page = target;
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip(tooltip);
+        if (ImGui.IsItemHovered()) Tip(tooltip);
         ImGui.Spacing();
     }
 
@@ -114,7 +114,7 @@ public sealed class MainWindow : Window, IDisposable
             Config.Enabled = enabled;
             Config.Save();
         }
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Turn off to pause every need and take the Moodles off.");
+        if (ImGui.IsItemHovered()) Tip("Turn off to pause every need and take the Moodles off.");
 
         ImGui.SameLine();
         var hardcore = Config.Hardcore;
@@ -123,7 +123,7 @@ public sealed class MainWindow : Window, IDisposable
             Config.Hardcore = hardcore;
             Config.Save();
         }
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Adds Bladder and Hygiene, each refilled by an emote you choose.");
+        if (ImGui.IsItemHovered()) Tip("Adds Bladder and Hygiene, each refilled by an emote you choose.");
 
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
@@ -177,7 +177,7 @@ public sealed class MainWindow : Window, IDisposable
             s.Enabled = on;
             Config.Save();
         }
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip(on ? "Tracking this need. Untick to ignore it." : "Not tracked.");
+        if (ImGui.IsItemHovered()) Tip(on ? "Tracking this need. Untick to ignore it." : "Not tracked.");
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         ImGui.TextUnformatted(info.Name);
@@ -200,7 +200,7 @@ public sealed class MainWindow : Window, IDisposable
             if (ImGui.SliderFloat("Full to empty##hours", ref hours, 0.5f, 24f, FormatHours(hours)))
                 s.HoursToEmpty = MathF.Round(hours * 4) / 4;
             if (ImGui.IsItemDeactivatedAfterEdit()) Config.Save();
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Real time for this need to run from full to empty. Ctrl+click to type.");
+            if (ImGui.IsItemHovered()) Tip("Real time for this need to run from full to empty. Ctrl+click to type.");
 
             switch (info.Kind)
             {
@@ -279,7 +279,7 @@ public sealed class MainWindow : Window, IDisposable
             ImGui.EndCombo();
         }
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Doing this emote refills the need at once. Pair it with a Penumbra animation mod that replaces the emote.");
+            Tip("Doing this emote refills the need at once. Pair it with a Penumbra animation mod that replaces the emote.");
     }
 
     private void DrawDanceList()
@@ -324,7 +324,7 @@ public sealed class MainWindow : Window, IDisposable
         else Colored(Good, m.Status);
         if (ImGui.Button("Apply again"))
             m.Reset();
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Take Creature Comforts' Moodles off and put the right ones back on.");
+        if (ImGui.IsItemHovered()) Tip("Take Creature Comforts' Moodles off and put the right ones back on.");
 
         ImGui.Spacing();
         Title("When Moodles appear");
@@ -361,7 +361,7 @@ public sealed class MainWindow : Window, IDisposable
                 ImGui.SetNextItemWidth(150);
                 if (ImGui.InputText($"##title{i}", ref title, 64)) s.Titles[i] = title;
                 if (ImGui.IsItemDeactivatedAfterEdit()) Config.Save();
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Moodle name at {i + 1} stack{(i == 0 ? "" : "s")}.");
+                if (ImGui.IsItemHovered()) Tip($"Moodle name at {i + 1} stack{(i == 0 ? "" : "s")}.");
                 if (i < 2) ImGui.SameLine();
             }
             var desc = s.Description;
@@ -427,7 +427,7 @@ public sealed class MainWindow : Window, IDisposable
                 ImGui.CloseCurrentPopup();
             }
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"{icon.Name}\nicon {icon.Icon}{(icon.MaxStacks > 1 ? $", up to {icon.MaxStacks} stacks" : "")}");
+                Tip($"{icon.Name}\nicon {icon.Icon}{(icon.MaxStacks > 1 ? $", up to {icon.MaxStacks} stacks" : "")}");
             ImGui.PopID();
         }
         ImGui.EndChild();
@@ -449,7 +449,7 @@ public sealed class MainWindow : Window, IDisposable
             Config.Save();
         }
         ImGui.AlignTextToFramePadding();
-        ImGui.TextUnformatted("Here: " + (Plugin.ClientState.IsLoggedIn ? GameInfo.Describe() : "not logged in"));
+        ImGui.TextWrapped("Here: " + (Plugin.ClientState.IsLoggedIn ? GameInfo.Describe() : "not logged in"));
         ImGui.SameLine();
         if (Tracker.RestSpot) Colored(Good, "(rest spot)"); else Colored(Muted, "(not a rest spot)");
 
@@ -481,7 +481,7 @@ public sealed class MainWindow : Window, IDisposable
         {
             ImGui.PushID(v.HouseId.ToString());
             if (ImGuiComponents.IconButton(FontAwesomeIcon.Trash) && ImGui.GetIO().KeyCtrl) delete = v;
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Ctrl+click to remove.");
+            if (ImGui.IsItemHovered()) Tip("Ctrl+click to remove.");
             ImGui.SameLine();
             var name = v.Name;
             ImGui.SetNextItemWidth(320);
@@ -569,7 +569,7 @@ public sealed class MainWindow : Window, IDisposable
     private static void Title(string text)
     {
         ImGui.SetWindowFontScale(1.15f);
-        ImGui.TextUnformatted(text);
+        ImGui.TextWrapped(text);
         ImGui.SetWindowFontScale(1f);
     }
 
@@ -577,7 +577,7 @@ public sealed class MainWindow : Window, IDisposable
     {
         Colored(Muted, label + ":");
         ImGui.SameLine(160);
-        ImGui.TextUnformatted(value);
+        ImGui.TextWrapped(value);
     }
 
     private static void Note(string text)
@@ -587,5 +587,21 @@ public sealed class MainWindow : Window, IDisposable
         ImGui.PopStyleColor();
     }
 
-    private static void Colored(Vector4 color, string text) => ImGui.TextColored(color, text);
+    /// <summary>A hover tooltip that wraps long text instead of stretching across the screen.</summary>
+    private static void Tip(string text)
+    {
+        ImGui.BeginTooltip();
+        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 24);
+        ImGui.TextUnformatted(text);
+        ImGui.PopTextWrapPos();
+        ImGui.EndTooltip();
+    }
+
+    /// <summary>Colored text that wraps at the edge of the page instead of running off it.</summary>
+    private static void Colored(Vector4 color, string text)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, color);
+        ImGui.TextWrapped(text);
+        ImGui.PopStyleColor();
+    }
 }
