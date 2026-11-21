@@ -229,6 +229,7 @@ public sealed class MainWindow : Window, IDisposable
                 case NeedKind.Bladder:
                 case NeedKind.Hygiene:
                     DrawEmotePicker(s);
+                    DrawPosePicker(s);
                     if (info.Kind == NeedKind.Hygiene)
                     {
                         ImGui.SameLine();
@@ -280,6 +281,34 @@ public sealed class MainWindow : Window, IDisposable
         }
         if (ImGui.IsItemHovered())
             Tip("Doing this emote refills the need at once. Pair it with a Penumbra animation mod that replaces the emote.");
+    }
+
+    private void DrawPosePicker(NeedSettings s)
+    {
+        var me = Plugin.ObjectTable.LocalPlayer;
+        if (ImGui.Button("Use my current pose##pose") && me != null)
+        {
+            var p = GameInfo.CurrentPose(me);
+            s.RefillPoseType = p.Type;
+            s.RefillPoseIndex = p.Index;
+            Config.Save();
+        }
+        if (ImGui.IsItemHovered())
+            Tip("Get into the idle pose your animation mod replaces (stand or /groundsit, then /cpose until it's the right one), then click this. Changing into that pose refills the need.");
+        ImGui.SameLine();
+        ImGui.AlignTextToFramePadding();
+        if (s.RefillPoseType < 0)
+        {
+            Colored(Muted, "Refill pose: none");
+            return;
+        }
+        ImGui.TextWrapped("Refill pose: " + GameInfo.PoseName(s.RefillPoseType, s.RefillPoseIndex));
+        ImGui.SameLine();
+        if (ImGui.SmallButton("Clear##pose"))
+        {
+            s.RefillPoseType = -1;
+            Config.Save();
+        }
     }
 
     private void DrawDanceList()
@@ -513,6 +542,8 @@ public sealed class MainWindow : Window, IDisposable
         var pose = GameInfo.Pose(me);
         Line("Pose", $"{pose.Mode} / {pose.Param}  (lying in bed = InPositionLoop / {GameInfo.BedMode})");
         Line("Sleeping in bed", Tracker.Sleeping ? "yes" : "no");
+        var cp = GameInfo.CurrentPose(me);
+        Line("Idle pose (/cpose)", GameInfo.PoseName(cp.Type, cp.Index));
         Line("Emote now", $"{GameInfo.EmoteName(pose.Emote)} ({pose.Emote})");
         Line("Last emote seen", Tracker.LastEmoteSeen);
         Line("Dancing", Tracker.Dancing ? "yes" : "no");

@@ -24,6 +24,7 @@ public sealed class NeedTracker : IDisposable
 
     // Edge detection
     private ushort lastEmote;
+    private (int Type, byte Index) lastPose = (-1, 0);
     private long lastMgp = -1;
     private bool wasInEvent;
     private DateTime chatCooldown = DateTime.MinValue;
@@ -99,6 +100,7 @@ public sealed class NeedTracker : IDisposable
         contentId = Plugin.PlayerState.ContentId;
         lastTick = now;
         lastEmote = GameInfo.Pose(me).Emote;
+        lastPose = GameInfo.CurrentPose(me);
         lastMgp = GameInfo.Mgp();
         levels.Clear();
 
@@ -157,6 +159,14 @@ public sealed class NeedTracker : IDisposable
             if (pose.Emote != 0) OnEmote(me, pose.Emote, now);
         }
 
+        // /cpose idles (for animation mods that replace a pose): react when you change into one.
+        var cpose = GameInfo.CurrentPose(me);
+        if (cpose != lastPose)
+        {
+            lastPose = cpose;
+            OnPose(cpose);
+        }
+
         // MGP going up = you won something at the Gold Saucer (GATEs, Triple Triad, races, machines...).
         var mgp = GameInfo.Mgp();
         if (mgp >= 0)
@@ -207,6 +217,18 @@ public sealed class NeedTracker : IDisposable
             emoteSocialCooldown = now + TimeSpan.FromSeconds(10);
             Add(NeedKind.Social, Config.SocialPerEmote);
             LastActivity = $"{GameInfo.EmoteName(emote)} at {other.Name.TextValue}: Social +{Config.SocialPerEmote:0}.";
+        }
+    }
+
+    private void OnPose((int Type, byte Index) pose)
+    {
+        foreach (var kind in new[] { NeedKind.Bladder, NeedKind.Hygiene })
+        {
+            var s = Config.For(kind);
+            if (!Config.IsActive(kind) || s.RefillPoseType < 0) continue;
+            if (s.RefillPoseType != pose.Type || s.RefillPoseIndex != pose.Index) continue;
+            current!.Set(kind, 100);
+            LastActivity = $"{GameInfo.PoseName(pose.Type, pose.Index)}: {Needs.Info(kind).Name} refilled.";
         }
     }
 

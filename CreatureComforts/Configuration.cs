@@ -104,6 +104,11 @@ public class NeedSettings
     /// <summary>Emote that fills this need instantly (hardcore needs). 0 = none.</summary>
     public uint RefillEmote { get; set; }
 
+    /// <summary>/cpose idle that fills this need instantly: pose type (EmoteController.PoseType; -1 = none)
+    /// and the pose number within it (EmoteController.CPoseState, 0-based).</summary>
+    public int RefillPoseType { get; set; } = -1;
+    public byte RefillPoseIndex { get; set; }
+
     public uint Icon { get; set; }
 
     /// <summary>Moodle title at 1, 2 and 3 stacks.</summary>

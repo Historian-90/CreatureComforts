@@ -20,10 +20,11 @@ Flavor only: nothing here changes gameplay. Everything runs on your own PC; noth
 
 | Need | Fills up when you... |
 |---|---|
-| **Bladder** | Use the emote you picked for it. |
-| **Hygiene** | Use the emote you picked for it. Drains faster in combat. |
+| **Bladder** | Use the emote you picked for it, or change into the `/cpose` idle you picked. |
+| **Hygiene** | Use the emote you picked for it, or change into the `/cpose` idle you picked. Drains faster in combat. |
 
-Hardcore emotes are meant to be paired with Penumbra animation mods that replace those emotes.
+Hardcore emotes and poses are meant to be paired with Penumbra animation mods that replace them. To pick a
+pose, get into it (stand or `/groundsit`, then `/cpose` until it's the right one) and click *Use my current pose*.
 
 Needs only drain while you're logged in. How fast each one drains (and how fast things refill it) can be
 changed in the plugin.

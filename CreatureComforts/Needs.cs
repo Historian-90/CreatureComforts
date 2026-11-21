@@ -55,12 +55,12 @@ public static class Needs
         new(NeedKind.Bladder, "Bladder", true, 2f, 217641,
             ["Needs the Restroom", "Urgent", "Desperate"],
             "Find a restroom.",
-            "Use your chosen emote.",
+            "Use your chosen emote, or change into your chosen /cpose idle.",
             new Guid("c0f0c0f0-0005-4c43-9e65-6564730a0005")),
         new(NeedKind.Hygiene, "Hygiene", true, 6f, 218881,
             ["Grubby", "Smelly", "Filthy"],
             "Time for a bath.",
-            "Use your chosen emote. Drains faster in combat.",
+            "Use your chosen emote, or change into your chosen /cpose idle. Drains faster in combat.",
             new Guid("c0f0c0f0-0006-4c43-9e65-6564730a0006")),
     ];
 

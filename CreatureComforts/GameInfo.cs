@@ -92,6 +92,29 @@ public static class GameInfo
         return (chara->Mode, chara->ModeParam, chara->EmoteController.EmoteId);
     }
 
+    /// <summary>The /cpose idle you're in: pose type (standing, sitting on the ground...) and its number (0-based).</summary>
+    public static unsafe (int Type, byte Index) CurrentPose(IPlayerCharacter me)
+    {
+        var chara = (Character*)me.Address;
+        return ((int)chara->EmoteController.CurrentPoseType, chara->EmoteController.CPoseState);
+    }
+
+    public static string PoseName(int type, byte index)
+    {
+        var kind = type switch
+        {
+            0 => "Standing",
+            1 => "Standing, weapon drawn",
+            2 => "Sitting in a chair",
+            3 => "Sitting on the ground",
+            4 => "Dozing",
+            5 => "Holding an umbrella",
+            6 => "With an accessory",
+            _ => $"Pose type {type}",
+        };
+        return $"{kind}, pose {index + 1}";
+    }
+
     public static bool InBed(IPlayerCharacter me)
     {
         var p = Pose(me);
