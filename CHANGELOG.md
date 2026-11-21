@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+- Bladder and Hygiene can also be refilled by a /cpose idle (standing, sitting on the ground and so on): get into the pose and click "Use my current pose".
+- Long text and tooltips now wrap instead of running off the window.
+- The "Moodles is blocking us" message now names the exact Moodles checkbox to tick.
+
 ## 0.1.0
 - First version: Hunger, Sleep, Fun and Social needs, plus Bladder and Hygiene in hardcore mode.
 - Needs show as Moodles that stack up as a need gets worse, and a Serene buff when everything is met.
