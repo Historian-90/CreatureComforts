@@ -7,7 +7,7 @@ namespace CreatureComforts;
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
-    public int Version { get; set; } = 1;
+    public int Version { get; set; } = 2;
 
     public bool Enabled { get; set; } = true;
 
@@ -86,6 +86,20 @@ public class Configuration : IPluginConfiguration
             NeedSettings[kind] = s;
         }
         return s;
+    }
+
+    /// <summary>Brings older settings up to date. Icons only change if they were still the old defaults.</summary>
+    public void Migrate()
+    {
+        if (Version < 2)
+        {
+            // 0.1.2: new default icons for Social (Brand of the Sullen), Hygiene (Concentrated Poison) and Serene (Diamondback).
+            if (NeedSettings.TryGetValue(NeedKind.Social, out var social) && social.Icon == 218961) social.Icon = 218041;
+            if (NeedSettings.TryGetValue(NeedKind.Hygiene, out var hygiene) && hygiene.Icon == 218881) hygiene.Icon = 218581;
+            if (SereneIcon == 217311) SereneIcon = 213509;
+            Version = 2;
+            Save();
+        }
     }
 
     public bool IsActive(NeedKind kind) => For(kind).Enabled && (Hardcore || !Needs.Info(kind).Hardcore);

@@ -47,7 +47,7 @@ public static class Needs
             "Have some fun: the Gold Saucer, a dance, or a night out at a venue.",
             "Win MGP (GATEs, Triple Triad, races, Verminion, game machines), the inn's Toy Chest, dance emotes, or time at a venue.",
             new Guid("c0f0c0f0-0003-4c43-9e65-6564730a0003")),
-        new(NeedKind.Social, "Social", false, 4f, 218961,
+        new(NeedKind.Social, "Social", false, 4f, 218041,
             ["Lonely", "Very Lonely", "Isolated"],
             "Spend time with people: join a party, chat, or emote at someone.",
             "Being in a party, sending chat messages, or using emotes while targeting another player.",
@@ -57,7 +57,7 @@ public static class Needs
             "Find a restroom.",
             "Use your chosen emote, or change into your chosen /cpose idle.",
             new Guid("c0f0c0f0-0005-4c43-9e65-6564730a0005")),
-        new(NeedKind.Hygiene, "Hygiene", true, 6f, 218881,
+        new(NeedKind.Hygiene, "Hygiene", true, 6f, 218581,
             ["Grubby", "Smelly", "Filthy"],
             "Time for a bath.",
             "Use your chosen emote, or change into your chosen /cpose idle. Drains faster in combat.",
@@ -65,7 +65,7 @@ public static class Needs
     ];
 
     public static readonly Guid SereneGuid = new("c0f0c0f0-0007-4c43-9e65-6564730a0007");
-    public const uint SereneIcon = 217311;
+    public const uint SereneIcon = 213509;
     public const string SereneTitle = "Serene";
     public const string SereneDescription = "Every need is met. Life is good.";
 

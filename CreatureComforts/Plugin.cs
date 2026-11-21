@@ -39,6 +39,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         foreach (var n in Needs.All) Configuration.For(n.Kind);
+        Configuration.Migrate();
 
         Tracker = new NeedTracker(this);
         ipc = new Ipc(Tracker);
