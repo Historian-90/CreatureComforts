@@ -71,9 +71,22 @@ public class Configuration : IPluginConfiguration
 
     public bool DanceListSeeded { get; set; }
 
+    /// <summary>Which set of default dances has been added (2 = CJ's full list, 0.1.7).</summary>
+    public int DanceDefaultsVersion { get; set; }
+
+    /// <summary>
+    /// Dances whose names don't contain "dance" (those count anyway, e.g. Step Dance, Harvest Dance, Ball Dance,
+    /// Manderville Dance, Thavnairian Dance, Gold Dance, Sundrop/Moogle/Moonlift/Yol Dance, Little Ladies'
+    /// Dance, Flame/Eastern/Bomb Dance). Matching ignores case, spaces, punctuation and accents, and also
+    /// checks the text command (so "Breaking" matches through /breakdance).
+    /// </summary>
     public static readonly string[] DefaultDanceEmotes =
-        ["Bee's Knees", "Most Gentlemanly", "Songbird", "Box Step", "Side Step", "Get Fantasy", "Popotostep",
-         "Paint It Red", "Paint It Blue", "Paint It Yellow", "Paint It Black"];
+        ["Manderville Mambo", "Bee's Knees", "Lali Hop", "Lop Hop", "Breaking", "Songbird", "Señor Sabotender",
+         "Box Step", "Side Step", "Get Fantasy", "Popotostep", "Heel Toe", "Goobbue Do"];
+
+    /// <summary>Earlier defaults that aren't dances.</summary>
+    private static readonly string[] RetiredDanceDefaults =
+        ["Most Gentlemanly", "Paint It Red", "Paint It Blue", "Paint It Yellow", "Paint It Black"];
 
     // ---- Places ----
 
@@ -115,10 +128,13 @@ public class Configuration : IPluginConfiguration
             Version = 2;
             Save();
         }
-        if (!DanceListSeeded)
+        if (DanceDefaultsVersion < 2)
         {
+            ExtraDanceEmotes.RemoveAll(x => RetiredDanceDefaults.Contains(x.Trim(), StringComparer.OrdinalIgnoreCase));
             ExtraDanceEmotes.AddRange(DefaultDanceEmotes);
             DanceListSeeded = true;
+            DanceDefaultsVersion = 2;
+            Save();
         }
         // Clean up the repeats older versions piled up (keeps the first of each, in order).
         var unique = ExtraDanceEmotes.Select(x => x.Trim()).Where(x => x.Length > 0)

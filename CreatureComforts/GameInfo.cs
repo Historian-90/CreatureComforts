@@ -70,11 +70,58 @@ public static class GameInfo
         return name.Equals("Change Pose", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static Dictionary<uint, string>? emoteCommandsEnglish;
+
+    /// <summary>Lower-case letters and digits only, accents removed: "Señor Sabotender" -> "senorsabotender".</summary>
+    public static string Normalize(string text)
+    {
+        var sb = new System.Text.StringBuilder(text.Length);
+        foreach (var ch in text.Normalize(System.Text.NormalizationForm.FormD))
+        {
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch) == System.Globalization.UnicodeCategory.NonSpacingMark) continue;
+            if (char.IsLetterOrDigit(ch)) sb.Append(char.ToLowerInvariant(ch));
+        }
+        return sb.ToString();
+    }
+
+    private static string EmoteCommandEnglish(uint emoteId)
+    {
+        if (emoteCommandsEnglish == null)
+        {
+            emoteCommandsEnglish = [];
+            foreach (var e in Plugin.DataManager.GetExcelSheet<Emote>(ClientLanguage.English))
+            {
+                var cmd = e.TextCommand.ValueNullable?.Command.ExtractText() ?? string.Empty;
+                if (cmd.Length > 0) emoteCommandsEnglish[e.RowId] = cmd;
+            }
+        }
+        return emoteCommandsEnglish.TryGetValue(emoteId, out var c) ? c : string.Empty;
+    }
+
+    /// <summary>The emote whose English name or command matches this list entry, or 0.</summary>
+    public static uint FindEmote(string entry)
+    {
+        var want = Normalize(entry);
+        if (want.Length == 0) return 0;
+        foreach (var (id, name) in EmoteNamesEnglish)
+            if (Normalize(name) == want || Normalize(EmoteCommandEnglish(id)) == want) return id;
+        return 0;
+    }
+
     public static bool IsDance(uint emoteId, Configuration config)
     {
         if (emoteId == 0 || !EmoteNamesEnglish.TryGetValue(emoteId, out var name)) return false;
-        if (name.Contains("dance", StringComparison.OrdinalIgnoreCase)) return true;
-        return config.ExtraDanceEmotes.Any(x => string.Equals(x.Trim(), name, StringComparison.OrdinalIgnoreCase));
+        var command = EmoteCommandEnglish(emoteId);
+        if (name.Contains("dance", StringComparison.OrdinalIgnoreCase) ||
+            command.Contains("dance", StringComparison.OrdinalIgnoreCase)) return true;
+        var n = Normalize(name);
+        var c = Normalize(command);
+        foreach (var entry in config.ExtraDanceEmotes)
+        {
+            var e = Normalize(entry);
+            if (e.Length > 0 && (e == n || e == c)) return true;
+        }
+        return false;
     }
 
     /// <summary>The EmoteMode row used when you /doze on a bed (its start emote is "Sleep"; row 3 when checked).</summary>

@@ -2,6 +2,9 @@
 
 ## 0.1.7
 - Fixed the "Emotes that count as dancing" list gaining another copy of the default dances every time the plugin loaded. Repeats are cleaned up automatically.
+- Every dance in the game now counts for Fun, including Manderville Mambo, Lali Hop, Lop Hop, Breaking, Señor Sabotender, Heel Toe and Goobbue Do. Any emote with "dance" in its name or command counts automatically.
+- Add your own dances (for example an emote you've replaced with a dance mod): pick from the emote list, click "Add what I'm doing now" while emoting, or type a name. Names that don't match an emote are flagged.
+- Removed the Paint It emotes and Most Gentlemanly from the default dance list (they aren't dances).
 
 ## 0.1.6
 - Fixed a refill pose saved while moving or mid-emote ("Pose type 255") filling the need whenever you moved instead of while you held still. Such poses are cleared; set yours again.

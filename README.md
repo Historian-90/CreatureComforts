@@ -13,7 +13,7 @@ Flavor only: nothing here changes gameplay. Everything runs on your own PC; noth
 |---|---|
 | **Hunger** | Eat or drink anything that gives *Well Fed*. You stay full until it wears off. |
 | **Sleep** | Lie down with `/doze` on a bed, or log out in an inn room or your own home. Drains faster in duties. |
-| **Fun** | Win MGP (GATEs, Triple Triad, Chocobo Racing, Lord of Verminion, game machines), play with the inn's Toy Chest, dance, or spend time at a venue you've registered. |
+| **Fun** | Win MGP (GATEs, Triple Triad, Chocobo Racing, Lord of Verminion, game machines), play with the inn's Toy Chest, dance (every dance emote counts, and you can add your own, such as a modded one), or spend time at a venue you've registered. |
 | **Social** | Are in a party, chat, or use emotes while targeting another player. |
 
 **Hardcore mode** adds:

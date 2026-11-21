@@ -333,18 +333,43 @@ public sealed class MainWindow : Window, IDisposable
         }
     }
 
+    private readonly Dictionary<string, bool> danceFound = [];
+    private string danceNote = string.Empty;
+
+    private void AddDance(string name)
+    {
+        name = name.Trim();
+        if (name.Length == 0) return;
+        if (Config.ExtraDanceEmotes.Any(x => GameInfo.Normalize(x) == GameInfo.Normalize(name)))
+        {
+            danceNote = $"{name} is already on the list.";
+            return;
+        }
+        Config.ExtraDanceEmotes.Add(name);
+        Config.Save();
+        danceNote = $"Added {name}.";
+    }
+
     private void DrawDanceList()
     {
         if (!ImGui.TreeNode("Emotes that count as dancing##dances")) return;
-        Note("Any emote with \"dance\" in its name counts. Add others here (English emote names).");
+        Note("Any emote with \"dance\" in its name or command counts automatically (Dance, Step Dance, Gold Dance, Moogle Dance and so on). The ones below count too. Add your own, for example an emote you've replaced with a dance animation mod.");
+
         string? remove = null;
         foreach (var d in Config.ExtraDanceEmotes)
         {
             ImGui.PushID(d);
             if (ImGuiComponents.IconButton(FontAwesomeIcon.Times)) remove = d;
+            if (ImGui.IsItemHovered()) Tip("Remove from the list.");
             ImGui.SameLine();
             ImGui.AlignTextToFramePadding();
             ImGui.TextUnformatted(d);
+            if (!danceFound.TryGetValue(d, out var found)) danceFound[d] = found = GameInfo.FindEmote(d) != 0;
+            if (!found)
+            {
+                ImGui.SameLine();
+                Colored(Warn, "(no emote by this name)");
+            }
             ImGui.PopID();
         }
         if (remove != null)
@@ -352,16 +377,45 @@ public sealed class MainWindow : Window, IDisposable
             Config.ExtraDanceEmotes.Remove(remove);
             Config.Save();
         }
+
+        // Add: pick from the list, use what you're doing, or type a name.
+        emotes ??= GameInfo.PickableEmotes();
         ImGui.SetNextItemWidth(200);
-        ImGui.InputTextWithHint("##newdance", "Emote name", ref newDance, 64);
-        ImGui.SameLine();
-        if (ImGui.Button("Add") && newDance.Trim().Length > 0)
+        if (ImGui.BeginCombo("##adddance", "Add an emote...", ImGuiComboFlags.HeightLarge))
         {
-            if (!Config.ExtraDanceEmotes.Contains(newDance.Trim(), StringComparer.OrdinalIgnoreCase))
-                Config.ExtraDanceEmotes.Add(newDance.Trim());
-            newDance = string.Empty;
-            Config.Save();
+            ImGui.SetNextItemWidth(-1);
+            ImGui.InputTextWithHint("##dancefilter", "Search...", ref emoteFilter, 64);
+            foreach (var e in emotes)
+            {
+                if (emoteFilter.Length > 0 &&
+                    !e.Name.Contains(emoteFilter, StringComparison.OrdinalIgnoreCase) &&
+                    !e.Command.Contains(emoteFilter, StringComparison.OrdinalIgnoreCase)) continue;
+                if (ImGui.Selectable($"{e.Name}  {e.Command}##d{e.Id}"))
+                    AddDance(GameInfo.EmoteNamesEnglish.TryGetValue(e.Id, out var en) ? en : e.Name);
+            }
+            ImGui.EndCombo();
         }
+        ImGui.SameLine();
+        var me = Plugin.ObjectTable.LocalPlayer;
+        if (ImGui.Button("Add what I'm doing now##dance") && me != null)
+        {
+            var emote = GameInfo.Pose(me).Emote;
+            if (GameInfo.IsPoseEmote(emote))
+                danceNote = "Start the emote first (one that loops), then click this.";
+            else if (GameInfo.EmoteNamesEnglish.TryGetValue(emote, out var en))
+                AddDance(en);
+        }
+        if (ImGui.IsItemHovered()) Tip("Start the emote (for example one your dance animation mod replaces), then click this.");
+
+        ImGui.SetNextItemWidth(200);
+        ImGui.InputTextWithHint("##newdance", "Or type an emote name", ref newDance, 64);
+        ImGui.SameLine();
+        if (ImGui.Button("Add##typed"))
+        {
+            AddDance(newDance);
+            newDance = string.Empty;
+        }
+        if (danceNote.Length > 0) Colored(Muted, danceNote);
         ImGui.TreePop();
     }
 
