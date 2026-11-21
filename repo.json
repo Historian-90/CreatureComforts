@@ -1,0 +1,26 @@
+[
+  {
+    "Author": "CJ",
+    "Name": "Creature Comforts",
+    "InternalName": "CreatureComforts",
+    "AssemblyVersion": "0.1.0.0",
+    "Punchline": "Sims-style needs for roleplay: hunger, sleep, fun and social, shown as Moodles.",
+    "Description": "Gives your character needs that slowly run down and are refilled by things you already do in the game: eating food, sleeping in a bed, the Gold Saucer, dancing, venues, parties and chatting. Optional hardcore mode adds bladder and hygiene, refilled by an emote of your choice.\n\nNeeds show up as Moodles on your character (Moodles is required), so friends who sync Moodles see them too. Flavor only: nothing here affects gameplay. Everything runs locally; nothing is sent anywhere.",
+    "ApplicableVersion": "any",
+    "RepoUrl": "https://github.com/Historian-90/CreatureComforts",
+    "Tags": [
+      "roleplay",
+      "rp",
+      "needs",
+      "moodles",
+      "sims",
+      "immersion"
+    ],
+    "DalamudApiLevel": 15,
+    "IsTestingExclusive": false,
+    "DownloadLinkInstall": "https://github.com/Historian-90/CreatureComforts/releases/download/v0.1.0/latest.zip",
+    "DownloadLinkUpdate": "https://github.com/Historian-90/CreatureComforts/releases/download/v0.1.0/latest.zip",
+    "DownloadLinkTesting": "https://github.com/Historian-90/CreatureComforts/releases/download/v0.1.0/latest.zip",
+    "LastUpdate": 0
+  }
+]

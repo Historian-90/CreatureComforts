@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
+  <PropertyGroup>
+    <Version>0.1.0.0</Version>
+    <Author>CJ</Author>
+    <Name>Creature Comforts</Name>
+    <Punchline>Sims-style needs for roleplay: hunger, sleep, fun and social, shown as Moodles.</Punchline>
+    <Description>Gives your character needs that slowly run down and are refilled by things you already do in the game: eating food, sleeping in a bed, the Gold Saucer, dancing, venues, parties and chatting. Optional hardcore mode adds bladder and hygiene, refilled by an emote of your choice.
+
+Needs show up as Moodles on your character (Moodles is required), so friends who sync Moodles see them too. Flavor only: nothing here affects gameplay. Everything runs locally; nothing is sent anywhere.</Description>
+    <RepoUrl>https://github.com/Historian-90/CreatureComforts</RepoUrl>
+    <Tags>roleplay;rp;needs;moodles;sims;immersion</Tags>
+  </PropertyGroup>
+</Project>
