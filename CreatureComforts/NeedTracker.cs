@@ -25,6 +25,11 @@ public sealed class NeedTracker : IDisposable
     // Edge detection
     private ushort lastEmote;
     private (int Type, byte Index) lastPose = (-1, 0);
+    private System.Numerics.Vector3? lastPosition;
+    private readonly Dictionary<NeedKind, bool> holdingNeeds = [];
+
+    /// <summary>True while you're holding the emote or pose that fills this need.</summary>
+    public bool Holding(NeedKind kind) => holdingNeeds.TryGetValue(kind, out var h) && h;
     private long lastMgp = -1;
     private bool wasInEvent;
     private DateTime chatCooldown = DateTime.MinValue;
@@ -160,11 +165,22 @@ public sealed class NeedTracker : IDisposable
         }
 
         // /cpose idles (for animation mods that replace a pose): react when you change into one.
+        // Hardcore needs fill while you HOLD the chosen emote (a looping one) or /cpose idle, standing still.
         var cpose = GameInfo.CurrentPose(me);
-        if (cpose != lastPose)
+        var pos = me.Position;
+        var still = lastPosition is { } lp && System.Numerics.Vector3.Distance(lp, pos) < 0.05f;
+        lastPosition = pos;
+        lastPose = cpose;
+        foreach (var kind in new[] { NeedKind.Bladder, NeedKind.Hygiene })
         {
-            lastPose = cpose;
-            OnPose(cpose);
+            var s = Config.For(kind);
+            var byEmote = s.RefillEmote != 0 && pose.Emote == s.RefillEmote;
+            var byPose = s.RefillPoseType >= 0 && cpose.Type == s.RefillPoseType && cpose.Index == s.RefillPoseIndex &&
+                         still && (pose.Emote == 0 || pose.Mode == FFXIVClientStructs.FFXIV.Client.Game.Character.CharacterModes.InPositionLoop);
+            var holding = Config.IsActive(kind) && (byEmote || byPose);
+            if (holding && !Holding(kind))
+                LastActivity = $"{(byEmote ? GameInfo.EmoteName(pose.Emote) : GameInfo.PoseName(cpose.Type, cpose.Index))}: filling {Needs.Info(kind).Name}...";
+            holdingNeeds[kind] = holding;
         }
 
         // MGP going up = you won something at the Gold Saucer (GATEs, Triple Triad, races, machines...).
@@ -195,16 +211,6 @@ public sealed class NeedTracker : IDisposable
     {
         LastEmoteSeen = $"{GameInfo.EmoteName(emote)} ({emote})";
 
-        foreach (var kind in new[] { NeedKind.Bladder, NeedKind.Hygiene })
-        {
-            var s = Config.For(kind);
-            if (Config.IsActive(kind) && s.RefillEmote != 0 && s.RefillEmote == emote)
-            {
-                current!.Set(kind, 100);
-                LastActivity = $"{GameInfo.EmoteName(emote)}: {Needs.Info(kind).Name} refilled.";
-            }
-        }
-
         if (GameInfo.IsDance(emote, Config))
         {
             Add(NeedKind.Fun, Config.FunPerDance);
@@ -217,18 +223,6 @@ public sealed class NeedTracker : IDisposable
             emoteSocialCooldown = now + TimeSpan.FromSeconds(10);
             Add(NeedKind.Social, Config.SocialPerEmote);
             LastActivity = $"{GameInfo.EmoteName(emote)} at {other.Name.TextValue}: Social +{Config.SocialPerEmote:0}.";
-        }
-    }
-
-    private void OnPose((int Type, byte Index) pose)
-    {
-        foreach (var kind in new[] { NeedKind.Bladder, NeedKind.Hygiene })
-        {
-            var s = Config.For(kind);
-            if (!Config.IsActive(kind) || s.RefillPoseType < 0) continue;
-            if (s.RefillPoseType != pose.Type || s.RefillPoseIndex != pose.Index) continue;
-            current!.Set(kind, 100);
-            LastActivity = $"{GameInfo.PoseName(pose.Type, pose.Index)}: {Needs.Info(kind).Name} refilled.";
         }
     }
 
@@ -314,6 +308,12 @@ public sealed class NeedTracker : IDisposable
                 case NeedKind.Hygiene:
                     if (GameInfo.InCombat()) drain *= Config.HygieneCombatMultiplier;
                     break;
+            }
+
+            if ((kind is NeedKind.Bladder or NeedKind.Hygiene) && Holding(kind))
+            {
+                drain = 0;
+                gain = Config.HoldRefillPerSecond * dt;
             }
 
             c.Set(kind, c.Get(kind) - drain + gain);

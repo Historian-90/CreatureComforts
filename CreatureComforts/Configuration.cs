@@ -54,6 +54,9 @@ public class Configuration : IPluginConfiguration
     public float SocialPerChat { get; set; } = 3f;
     public float SocialPerEmote { get; set; } = 5f;
 
+    /// <summary>Percent per second Bladder and Hygiene fill while you hold their emote or pose.</summary>
+    public float HoldRefillPerSecond { get; set; } = 10f;
+
     /// <summary>Hygiene drains this many times faster in combat.</summary>
     public float HygieneCombatMultiplier { get; set; } = 2f;
 

@@ -229,7 +229,10 @@ public sealed class MainWindow : Window, IDisposable
                 case NeedKind.Bladder:
                 case NeedKind.Hygiene:
                     DrawEmotePicker(s);
+                    ImGui.SameLine();
+                    SliderSetting("Fill while holding##hold", Config.HoldRefillPerSecond, 1f, 50f, "%.0f%%/s", v => Config.HoldRefillPerSecond = v, 110);
                     DrawPosePicker(s);
+                    if (Tracker.Holding(info.Kind)) Colored(Good, "Filling while you hold it...");
                     if (info.Kind == NeedKind.Hygiene)
                     {
                         ImGui.SameLine();
@@ -280,7 +283,7 @@ public sealed class MainWindow : Window, IDisposable
             ImGui.EndCombo();
         }
         if (ImGui.IsItemHovered())
-            Tip("Doing this emote refills the need at once. Pair it with a Penumbra animation mod that replaces the emote.");
+            Tip("Holding this emote fills the need a little every second. Pick an emote that loops (keeps playing until you move), or it only counts for the moment it plays. Pair it with a Penumbra animation mod that replaces the emote.");
     }
 
     private void DrawPosePicker(NeedSettings s)
@@ -294,7 +297,7 @@ public sealed class MainWindow : Window, IDisposable
             Config.Save();
         }
         if (ImGui.IsItemHovered())
-            Tip("Get into the idle pose your animation mod replaces (stand or /groundsit, then /cpose until it's the right one), then click this. Changing into that pose refills the need.");
+            Tip("Get into the idle pose your animation mod replaces (stand or /groundsit, then /cpose until it's the right one), then click this. Holding that pose while standing still fills the need a little every second.");
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         if (s.RefillPoseType < 0)
