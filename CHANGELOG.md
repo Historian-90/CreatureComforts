@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.9
+- New "Show as" choice at the top of the window: Moodles, Mini display, or Both. With Mini display only, Creature Comforts takes its Moodles off and leaves Moodles alone entirely (Moodles isn't needed then).
+
 ## 0.1.8
 - New mini display: a small, always-on set of need icons and bars for your HUD. Drag it anywhere, right-click it for options, and lock it in place so clicks pass through. Settings are on the new Mini display page; /comforts hud shows or hides it and /comforts lock locks it.
 - Bars pulse while a need is filling.

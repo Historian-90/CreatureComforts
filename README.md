@@ -61,6 +61,9 @@ There's also a **mini display**: a small set of need icons and bars you can keep
 want it, right-click it for options, and lock it so clicks pass through to the game. `/comforts hud` shows or
 hides it, `/comforts lock` locks or unlocks it.
 
+Choose how needs show with **Show as** at the top of the window: **Moodles**, **Mini display**, or **Both**.
+With the mini display only, Creature Comforts doesn't use Moodles at all, so Moodles isn't required.
+
 ## For plugin developers
 
 Other plugins can read and nudge needs over Dalamud IPC:

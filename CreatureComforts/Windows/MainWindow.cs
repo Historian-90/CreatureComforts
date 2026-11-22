@@ -131,11 +131,30 @@ public sealed class MainWindow : Window, IDisposable
 
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
-        var m = plugin.Moodles;
-        if (!m.Available || m.Refused)
-            Colored(Warn, m.Available ? "Moodles is blocking us (see Moodles page)" : "Moodles not found");
-        else
-            Colored(Good, "Moodles connected");
+        ImGui.TextUnformatted("Show as:");
+        ImGui.SameLine();
+        string[] modes = ["Moodles", "Mini display", "Both"];
+        var mode = Config.UseMoodles && Config.ShowHud ? 2 : Config.ShowHud ? 1 : 0;
+        ImGui.SetNextItemWidth(130);
+        if (ImGui.Combo("##showas", ref mode, modes, modes.Length))
+        {
+            Config.UseMoodles = mode != 1;
+            Config.ShowHud = mode != 0;
+            Config.Save();
+        }
+        if (ImGui.IsItemHovered())
+            Tip("Moodles: needs appear as Moodles on your character (friends who sync Moodles see them too).\nMini display: small bars on your screen only; Creature Comforts leaves Moodles alone.\nBoth: the two together.");
+
+        if (Config.UseMoodles)
+        {
+            ImGui.SameLine();
+            ImGui.AlignTextToFramePadding();
+            var m = plugin.Moodles;
+            if (!m.Available || m.Refused)
+                Colored(Warn, m.Available ? "Moodles is blocking us (see Moodles page)" : "Moodles not found");
+            else
+                Colored(Good, "Moodles connected");
+        }
     }
 
     // ---- Needs ----------------------------------------------------------------------------------
@@ -432,6 +451,7 @@ public sealed class MainWindow : Window, IDisposable
 
         var show = Config.ShowHud;
         if (ImGui.Checkbox("Show the mini display", ref show)) { Config.ShowHud = show; Config.Save(); }
+        if (!Config.ShowHud && !Config.UseMoodles) Colored(Warn, "Moodles are off too, so your needs only show in this window.");
         var locked = Config.HudLocked;
         if (ImGui.Checkbox("Lock it in place (clicks pass through)", ref locked)) { Config.HudLocked = locked; Config.Save(); }
 
@@ -463,6 +483,11 @@ public sealed class MainWindow : Window, IDisposable
     {
         var m = plugin.Moodles;
         Title("Moodles");
+        if (!Config.UseMoodles)
+        {
+            Colored(Warn, "Moodles are switched off (\"Show as\" at the top is set to Mini display). These settings apply when you switch them back on.");
+            ImGui.Spacing();
+        }
         if (!m.Available) Colored(Warn, m.Status);
         else if (m.Refused) Colored(Bad, m.Status);
         else Colored(Good, m.Status);

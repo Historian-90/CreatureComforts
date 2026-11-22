@@ -88,6 +88,9 @@ public class Configuration : IPluginConfiguration
     private static readonly string[] RetiredDanceDefaults =
         ["Most Gentlemanly", "Paint It Red", "Paint It Blue", "Paint It Yellow", "Paint It Black"];
 
+    /// <summary>Show needs as Moodles. Off = Creature Comforts never touches Moodles.</summary>
+    public bool UseMoodles { get; set; } = true;
+
     // ---- Mini needs display (HUD) ----
 
     public bool ShowHud { get; set; } = true;

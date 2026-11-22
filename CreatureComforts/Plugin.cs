@@ -35,6 +35,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly WindowSystem windows = new("CreatureComforts");
     private readonly MainWindow mainWindow;
     private readonly HudWindow hudWindow;
+    private bool moodlesInUse = true;
 
     public Plugin()
     {
@@ -72,7 +73,7 @@ public sealed class Plugin : IDalamudPlugin
         windows.RemoveAllWindows();
         mainWindow.Dispose();
         ipc.Dispose();
-        Moodles.RemoveAll(ObjectTable.LocalPlayer);
+        if (moodlesInUse) Moodles.RemoveAll(ObjectTable.LocalPlayer);
         Tracker.Dispose();
     }
 
@@ -105,7 +106,20 @@ public sealed class Plugin : IDalamudPlugin
             var me = ObjectTable.LocalPlayer;
             Tracker.Tick(me);
             if (me != null && Tracker.Current != null)
-                Moodles.Sync(me, Tracker.WantedMoodles());
+            {
+                if (Configuration.UseMoodles)
+                {
+                    moodlesInUse = true;
+                    Moodles.Sync(me, Tracker.WantedMoodles());
+                }
+                else if (moodlesInUse)
+                {
+                    // Just switched Moodles off: take ours off once, then leave Moodles alone.
+                    Moodles.RemoveAll(me);
+                    Moodles.Reset();
+                    moodlesInUse = false;
+                }
+            }
         }
         catch (Exception ex)
         {
