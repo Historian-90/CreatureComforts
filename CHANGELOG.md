@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+- New mini display: a small, always-on set of need icons and bars for your HUD. Drag it anywhere, right-click it for options, and lock it in place so clicks pass through. Settings are on the new Mini display page; /comforts hud shows or hides it and /comforts lock locks it.
+- Bars pulse while a need is filling.
+
 ## 0.1.7
 - Fixed the "Emotes that count as dancing" list gaining another copy of the default dances every time the plugin loaded. Repeats are cleaned up automatically.
 - Every dance in the game now counts for Fun, including Manderville Mambo, Lali Hop, Lop Hop, Breaking, Señor Sabotender, Heel Toe and Goobbue Do. Any emote with "dance" in its name or command counts automatically.

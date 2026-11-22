@@ -57,6 +57,10 @@ Moodle condition such as "Starving" and your character will say something about 
 
 Open the window with `/comforts` (or `/needs`).
 
+There's also a **mini display**: a small set of need icons and bars you can keep on your HUD. Drag it where you
+want it, right-click it for options, and lock it so clicks pass through to the game. `/comforts hud` shows or
+hides it, `/comforts lock` locks or unlocks it.
+
 ## For plugin developers
 
 Other plugins can read and nudge needs over Dalamud IPC:

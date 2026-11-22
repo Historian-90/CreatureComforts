@@ -23,7 +23,7 @@ public sealed class MainWindow : Window, IDisposable
     private static readonly Vector4 Accent = new(0.55f, 0.42f, 0.85f, 1f);
     private const float RailWidth = 46f;
 
-    private enum Page { Needs, Moodles, Places, Testing }
+    private enum Page { Needs, Display, Moodles, Places, Testing }
 
     private readonly Plugin plugin;
     private Page page = Page.Needs;
@@ -62,6 +62,7 @@ public sealed class MainWindow : Window, IDisposable
 
         ImGui.BeginChild("##rail", new Vector2(RailWidth, 0));
         RailButton(Page.Needs, FontAwesomeIcon.Heart, "Needs\nHow your character is doing, and how each need drains and refills.");
+        RailButton(Page.Display, FontAwesomeIcon.ChartBar, "Mini display\nThe small always-on needs bars for your HUD.");
         RailButton(Page.Moodles, FontAwesomeIcon.TheaterMasks, "Moodles\nHow your needs look as Moodles: icons, names, when they appear.");
         RailButton(Page.Places, FontAwesomeIcon.Home, "Places\nRest spots and venues.");
         RailButton(Page.Testing, FontAwesomeIcon.Flask, "Testing\nWhat the plugin sees right now, and sliders to try things out.");
@@ -74,6 +75,7 @@ public sealed class MainWindow : Window, IDisposable
             switch (page)
             {
                 case Page.Needs: DrawNeeds(); break;
+                case Page.Display: DrawDisplay(); break;
                 case Page.Moodles: DrawMoodles(); break;
                 case Page.Places: DrawPlaces(); break;
                 case Page.Testing: DrawTesting(); break;
@@ -417,6 +419,42 @@ public sealed class MainWindow : Window, IDisposable
         }
         if (danceNote.Length > 0) Colored(Muted, danceNote);
         ImGui.TreePop();
+    }
+
+    // ---- Mini display -----------------------------------------------------------------------------
+
+    private void DrawDisplay()
+    {
+        Title("Mini display");
+        Note("A small set of icons and bars you can keep on screen. Unlocked, drag it anywhere and right-click it for options. Locked, it stays put and clicks pass through to the game.");
+        Note("Commands: /comforts hud shows or hides it, /comforts lock locks or unlocks it (/needs works too).");
+        ImGui.Spacing();
+
+        var show = Config.ShowHud;
+        if (ImGui.Checkbox("Show the mini display", ref show)) { Config.ShowHud = show; Config.Save(); }
+        var locked = Config.HudLocked;
+        if (ImGui.Checkbox("Lock it in place (clicks pass through)", ref locked)) { Config.HudLocked = locked; Config.Save(); }
+
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted("Layout:");
+        ImGui.SameLine();
+        if (ImGui.RadioButton("List", !Config.HudHorizontal)) { Config.HudHorizontal = false; Config.Save(); }
+        ImGui.SameLine();
+        if (ImGui.RadioButton("Row", Config.HudHorizontal)) { Config.HudHorizontal = true; Config.Save(); }
+
+        SliderSetting("Size##hudscale", Config.HudScale, 0.5f, 2.5f, "%.2fx", v => Config.HudScale = v, 200);
+        if (!Config.HudHorizontal)
+            SliderSetting("Bar length##hudbar", Config.HudBarWidth, 30f, 250f, "%.0f", v => Config.HudBarWidth = v, 200);
+        SliderSetting("Background##hudbg", Config.HudBackground, 0f, 1f, "%.2f", v => Config.HudBackground = v, 200);
+
+        if (ImGui.Button("Move it back to the middle of the screen"))
+        {
+            Config.HudPosition = ImGui.GetMainViewport().Size / 2;
+            Config.HudLocked = false;
+            Config.Save();
+            plugin.ResetHudPosition();
+        }
+        Note("Bars pulse while a need is filling (in bed, holding a refill emote or pose, and so on). Hover a need while unlocked to see its name and percentage.");
     }
 
     // ---- Moodles --------------------------------------------------------------------------------

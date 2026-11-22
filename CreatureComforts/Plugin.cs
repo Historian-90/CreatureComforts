@@ -34,6 +34,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly Ipc ipc;
     private readonly WindowSystem windows = new("CreatureComforts");
     private readonly MainWindow mainWindow;
+    private readonly HudWindow hudWindow;
 
     public Plugin()
     {
@@ -47,8 +48,10 @@ public sealed class Plugin : IDalamudPlugin
 
         mainWindow = new MainWindow(this);
         windows.AddWindow(mainWindow);
+        hudWindow = new HudWindow(this);
+        windows.AddWindow(hudWindow);
 
-        var help = new CommandInfo(OnCommand) { HelpMessage = "Open Creature Comforts (your character's needs)." };
+        var help = new CommandInfo(OnCommand) { HelpMessage = "Open Creature Comforts. \"/comforts hud\" shows or hides the mini needs display; \"/comforts lock\" locks or unlocks it." };
         CommandManager.AddHandler(Command, help);
         CommandManager.AddHandler(ShortCommand, new CommandInfo(OnCommand) { HelpMessage = "Same as /comforts." });
 
@@ -73,9 +76,27 @@ public sealed class Plugin : IDalamudPlugin
         Tracker.Dispose();
     }
 
-    private void OnCommand(string command, string args) => ToggleMain();
+    private void OnCommand(string command, string args)
+    {
+        switch (args.Trim().ToLowerInvariant())
+        {
+            case "hud":
+                Configuration.ShowHud = !Configuration.ShowHud;
+                Configuration.Save();
+                break;
+            case "lock":
+                Configuration.HudLocked = !Configuration.HudLocked;
+                Configuration.Save();
+                break;
+            default:
+                ToggleMain();
+                break;
+        }
+    }
 
     public void ToggleMain() => mainWindow.Toggle();
+
+    public void ResetHudPosition() => hudWindow.ResetPosition();
 
     private void OnUpdate(IFramework framework)
     {

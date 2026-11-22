@@ -88,6 +88,16 @@ public class Configuration : IPluginConfiguration
     private static readonly string[] RetiredDanceDefaults =
         ["Most Gentlemanly", "Paint It Red", "Paint It Blue", "Paint It Yellow", "Paint It Black"];
 
+    // ---- Mini needs display (HUD) ----
+
+    public bool ShowHud { get; set; } = true;
+    public bool HudLocked { get; set; }
+    public bool HudHorizontal { get; set; }
+    public float HudScale { get; set; } = 1f;
+    public float HudBarWidth { get; set; } = 90f;
+    public float HudBackground { get; set; } = 0.5f;
+    public System.Numerics.Vector2? HudPosition { get; set; }
+
     // ---- Places ----
 
     /// <summary>Logging out inside any house (not only your own) counts as rest.</summary>
